@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  HiArrowRightStartOnRectangle,
   HiArrowUpTray,
   HiMiniPencil,
   HiMiniTrash,
@@ -7,7 +8,9 @@ import {
 } from "react-icons/hi2";
 import { uid } from "uid";
 import { onValue, ref, remove, set } from "firebase/database";
-import { db } from "./firebase";
+import { auth, db } from "./firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 const Todo = () => {
   const [todo, setTodo] = useState("");
@@ -15,8 +18,15 @@ const Todo = () => {
   const [editMode, setEditMode] = useState(false);
   const [todoId, setTodoId] = useState("");
 
+  const navigate = useNavigate();
+
   useEffect(() => {
-    onValue(ref(db, "todos"), (snapshot) => {
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        navigate("/auth");
+      }
+    })
+    onValue(ref(db, `todos/${auth.currentUser.uid}`), (snapshot) => {
       setTodos([]);
       const data = snapshot.val();
       if (data) {
@@ -29,7 +39,7 @@ const Todo = () => {
 
   const handleAddTodo = () => {
     const todoId = uid();
-    set(ref(db, `todos/${todoId}`), {
+    set(ref(db, `todos/${auth.currentUser.uid}/${todoId}`), {
       todoId: todoId,
       todo: todo,
     });
@@ -38,7 +48,7 @@ const Todo = () => {
   };
 
   const deleteTodo = (todoId) => {
-    remove(ref(db, `todos/${todoId}`));
+    remove(ref(db, `todos/${auth.currentUser.uid}}/${todoId}`));
   };
 
   const editTodo = (todo) => {
@@ -48,7 +58,7 @@ const Todo = () => {
   };
 
   const updateTodo = () => {
-    set(ref(db, `todos/${todoId}`), {
+    set(ref(db, `todos/${auth.currentUser.uid}/${todoId}`), {
       todoId: todoId,
       todo: todo,
     });
@@ -56,9 +66,22 @@ const Todo = () => {
     setTodo("");
   };
 
+  const signout = () => {
+    signOut(auth)
+    .then(() => {
+      navigate("/auth");
+    })
+    .catch((error) => {
+      alert(error.message);
+    })
+  }
+
   return (
     <div className="w-[100%] h-[100vh] bg-bg py-[5rem]">
-      <div className="w-[85%] lg:w-[70%] max-w-[600px] h-[100%] mx-auto py-12 px-8 rounded-xl bg-white shadow-lg">
+      <div className="w-[85%] lg:w-[70%] max-w-[600px] h-[100%] mx-auto py-12 px-8 rounded-xl bg-white shadow-lg relative">
+        <button className="absolute top-4 right-4 text-2xl text-primary hover:text-secondary transition duration-200 cursor-pointer" onClick={signout}>
+            <HiArrowRightStartOnRectangle />
+        </button>
         <h1 className="text-2xl font-bold text-center mb-8 text-primary">
           React Todo List
         </h1>
