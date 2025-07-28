@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+body {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+@theme {
+    --color-bg: #EEF7FF;
+    --color-text-input: #CDE8E5;
+    --color-secondary: #7AB2B2;
+    --color-primary: #4D869C;
+}
